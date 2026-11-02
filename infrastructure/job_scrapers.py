@@ -25,7 +25,7 @@ from core.interfaces import IJobScraper
 class JobScraperImpl(IJobScraper):
     def __init__(self):
         self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 AutoJobAI/3.4'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 AutoJobAI/3.5'
         }
 
     # ----------------- 1. LIVE DUUNITORI SCRAPER (FINLAND NATIONWIDE & MULTI-TERM) -----------------
@@ -100,6 +100,11 @@ class JobScraperImpl(IJobScraper):
                     title = item.get("title", "")
                     direct_url = item.get("externalUrl")
                     if not direct_url or not title:
+                        continue
+
+                    # Strict URL validation: Jobly URLs MUST have the trailing numeric ID (e.g. -2791468)
+                    # Truncated slugs missing the numeric ID are expired/invalid in Work in Finland feed and return 404
+                    if "jobly.fi" in direct_url and not re.search(r'-\d+$', direct_url):
                         continue
 
                     title_lower = title.lower()
@@ -322,7 +327,7 @@ class JobScraperImpl(IJobScraper):
         # 1. Live Duunitori Finland (All Finland Nationwide, Multi-Query)
         all_jobs.extend(self._fetch_duunitori_live(query=query, max_pages=2))
 
-        # 2. Live Work in Finland (Business Finland Official Portal)
+        # 2. Live Work in Finland (Business Finland Official Portal - Validated)
         all_jobs.extend(self._fetch_work_in_finland(query=query, limit=50))
 
         # 3. Live Academic Work Finland (academicwork.fi Verified Direct Ads)
