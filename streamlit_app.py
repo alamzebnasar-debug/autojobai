@@ -115,7 +115,7 @@ with st.sidebar:
     st.divider()
     st.subheader("📬 Automated Alerts")
     email_enabled = st.checkbox("Daily Scan Alerts", value=True)
-    user_email = st.text_input("Alert Email", value="vickycricketer@gmail.com")
+    user_email = st.text_input("Alert Email", value="candidate@example.com")
     threshold = st.slider("Min Alert Fit Score (%)", 50, 95, 75)
     
     if st.button("🔔 Send Test Email Alert"):

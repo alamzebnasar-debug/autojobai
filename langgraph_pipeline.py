@@ -99,7 +99,7 @@ class LangGraphJobPipeline:
 
         if high_matches:
             alert = {
-                "recipient": state.state.get("user_email", "vickycricketer@gmail.com"),
+                "recipient": state.state.get("user_email", "candidate@example.com"),
                 "highMatchesCount": len(high_matches),
                 "topMatch": high_matches[0]["title"],
                 "dispatched": True
