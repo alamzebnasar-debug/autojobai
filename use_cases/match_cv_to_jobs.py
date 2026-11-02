@@ -13,16 +13,21 @@ class MatchCVToJobsUseCase:
         self.scraper = job_scraper
 
     def _extract_skills(self, text: str) -> List[str]:
-        common_tech = [
-            "python", "react", "fastapi", "django", "flask", "docker", "kubernetes", 
-            "aws", "gcp", "azure", "postgresql", "sql", "redis", "langgraph", 
-            "rag", "machine learning", "ai", "typescript", "javascript", "linux", 
-            "c++", "golang", "java", "node", "git", "ci/cd", "rest", "graphql", 
-            "microservices", "devops", "cloud", "data engineering", "pytorch"
+        common_skills = [
+            # Tech & Engineering
+            ".net", "c#", "c++", "java", "python", "javascript", "typescript", "react", "angular", "vue",
+            "fastapi", "django", "node", "docker", "kubernetes", "aws", "azure", "gcp", "sql", "postgresql",
+            "microservices", "devops", "cloud", "rest", "graphql", "embedded", "git", "ci/cd",
+            # Data & AI
+            "machine learning", "ai", "deep learning", "pytorch", "tensorflow", "rag", "data engineering",
+            # Healthcare & Public
+            "nursing", "healthcare", "clinical", "patient care", "sairaanhoitaja", "lähihoitaja",
+            # Business, Marketing & Finance
+            "marketing", "sales", "finance", "accounting", "project management", "crm", "seo", "leadership", "analytics"
         ]
         text_lower = text.lower()
-        found = [tech.title() for tech in common_tech if tech in text_lower]
-        return found if found else ["Python", "Backend", "APIs", "Cloud"]
+        found = [tech.title() if not tech.startswith(".") else tech.upper() for tech in common_skills if tech in text_lower]
+        return found if found else ["Professional Experience", "Technical Skills", "Communication"]
 
     def execute(
         self, 
@@ -41,7 +46,7 @@ class MatchCVToJobsUseCase:
         candidate = CandidateProfile(
             id="cand-01",
             full_name="Candidate (Protected)" if privacy_mode else "Alex Vance",
-            headline="Software & Systems Engineer",
+            headline="Professional Specialist",
             email="candidate@example.com",
             summary=sanitized_text[:350],
             years_experience=7 if "senior" in sanitized_text.lower() else 4,
@@ -64,24 +69,24 @@ class MatchCVToJobsUseCase:
         for job in raw_jobs:
             req_haystack = f"{job.title} {job.description} {' '.join(job.tags)} {' '.join(job.requirements)}".lower()
             
-            # Factor 1: Technical Skill Overlap (45% weight)
+            # Factor 1: Technical Skill Overlap (40% weight)
             matched_skills = [s for s in cand_skills if s.lower() in req_haystack]
-            skill_ratio = len(matched_skills) / max(1, min(4, len(cand_skills)))
-            skill_score = min(45, int(skill_ratio * 45))
+            skill_ratio = len(matched_skills) / max(1, min(3, len(cand_skills)))
+            skill_score = min(40, int(skill_ratio * 40))
 
-            # Factor 2: Role Title & Domain Alignment (30% weight)
-            title_words = [w for w in re.findall(r'\w+', job.title.lower()) if len(w) > 3 and w not in ["with", "from", "that", "this"]]
-            matched_title_words = sum(1 for w in title_words if w in cand_lower)
-            title_ratio = matched_title_words / max(1, len(title_words)) if title_words else 0.5
-            title_score = min(30, int(title_ratio * 25 + 8))
+            # Factor 2: Role Title & Search Query Alignment (35% weight)
+            q_words = [w.lower() for w in re.split(r'\W+', search_query or "") if len(w) > 1]
+            q_match = sum(1 for w in q_words if w in job.title.lower())
+            query_ratio = q_match / max(1, len(q_words)) if q_words else 0.5
+            title_score = min(35, int(query_ratio * 35))
 
-            # Factor 3: Seniority & Domain Match (15% weight)
-            seniority_score = 15 if "senior" in cand_lower and ("senior" in job.title.lower() or "lead" in job.title.lower() or "architect" in job.title.lower()) else 8
+            # Factor 3: Seniority & Experience Match (15% weight)
+            seniority_score = 15 if "senior" in cand_lower and ("senior" in job.title.lower() or "lead" in job.title.lower() or "architect" in job.title.lower()) else 10
 
-            # Factor 4: Baseline Alignment (5%)
-            base_score = 5
+            # Factor 4: Baseline Alignment (10%)
+            base_score = 10
 
-            # Total Differentiated Match Score (Natural spread from 40% up to 98%)
+            # Total Differentiated Match Score
             overall_score = min(98, max(40, skill_score + title_score + seniority_score + base_score))
             job.match_score = overall_score
 
@@ -102,7 +107,7 @@ class MatchCVToJobsUseCase:
                 experience_fit=min(95, overall_score - 2),
                 matched_skills=matched_skills if matched_skills else cand_skills[:3],
                 missing_skills=missing_skills[:3],
-                strengths=[f"Strong alignment with {', '.join(matched_skills[:3])}" if matched_skills else "General software engineering alignment"],
+                strengths=[f"Strong alignment with {', '.join(matched_skills[:3])}" if matched_skills else "General alignment with role requirements"],
                 evidence=evidence_chunks
             )
 
