@@ -1,8 +1,9 @@
 """
 Presentation Layer: Streamlit Dashboard UI
 AutoJobAI - Comprehensive Autonomous Job Hunter & Career Copilot
-- Aggregates Live Duunitori, WeWorkRemotely, Remotive, Arbeitnow, RemoteOK, LinkedIn
 - 100% Verified Live Job Ads with Zero Ghost Links
+- Extensive Coverage across Finland (Duunitori Nationwide + Work in Finland Official Hub) and Europe (Jobicy EU, Arbeitnow EU, WWR, RemoteOK)
+- Differentiated Multi-Factor Match Scoring (Real % based on candidate skills)
 - 1-Click Application Pack: Tailored Cover Letter + Recruiter Cold Outreach + Interview Prep Predictor
 - Fixed Widget Key Synchronization (No Cross-Company State Collisions)
 - Built-in Application Pipeline Tracker with CSV Export
@@ -12,6 +13,7 @@ import time
 import re
 import sys
 import os
+import urllib.parse
 import pandas as pd
 import io
 
@@ -144,8 +146,8 @@ with st.sidebar:
 
 # Header
 st.markdown("<h1 class='main-title'>AutoJobAI</h1>", unsafe_allow_html=True)
-st.markdown(f"<div style='display:inline-flex; align-items:center; gap:8px; background:#10B98122; border:1px solid #10B98166; color:#10B981; padding:4px 12px; border-radius:8px; font-weight:700; font-size:0.85rem; margin-bottom:8px;'>✔ 100% Verified Live Job Feeds &bull; Zero Ghost Links &bull; Real-Time Scraped</div>", unsafe_allow_html=True)
-st.markdown("<p class='subtitle'>Autonomous Job Hunter &bull; Real-Time Live Scrapers (Duunitori, WeWorkRemotely, Remotive, Arbeitnow, RemoteOK, LinkedIn)</p>", unsafe_allow_html=True)
+st.markdown(f"<div style='display:inline-flex; align-items:center; gap:8px; background:#10B98122; border:1px solid #10B98166; color:#10B981; padding:4px 12px; border-radius:8px; font-weight:700; font-size:0.85rem; margin-bottom:8px;'>✔ Comprehensive Multi-Channel Engine &bull; Extensive Finland & EU Coverage &bull; Differentiated Fit Scores</div>", unsafe_allow_html=True)
+st.markdown("<p class='subtitle'>Autonomous Job Hunter &bull; Real-Time Verified Postings (Duunitori Nationwide, Work in Finland Official Hub, Jobicy Europe, Arbeitnow EU, WeWorkRemotely, RemoteOK)</p>", unsafe_allow_html=True)
 
 # ----------------- SECTION 1: CV UPLOAD -----------------
 st.subheader("1. Your CV / Resume")
@@ -164,22 +166,18 @@ if uploaded_file is not None:
     st.success(f"✅ Loaded **{uploaded_file.name}** ({len(cv_text.split())} words extracted)")
 elif load_sample or "cv_text" in st.session_state:
     if load_sample:
-        st.session_state["cv_text"] = """Alex Vance | Senior Full Stack & AI Systems Engineer
-Email: candidate@example.com | San Francisco, CA
-SUMMARY: Senior Engineer with 7+ years of experience in Python, FastAPI, LangGraph, RAG pipelines, React, Docker, and AWS."""
+        st.session_state["cv_text"] = """Alex Vance | Senior AI Engineer & Machine Learning Specialist
+Email: candidate@example.com | Helsinki / Remote
+SUMMARY: Senior Engineer with 7+ years of experience in Python, Machine Learning, Deep Learning, PyTorch, LangGraph, RAG pipelines, React, Docker, and AWS."""
     cv_text = st.session_state.get("cv_text", "")
     st.info("ℹ️ Using pre-set sample candidate profile.")
 
-# ----------------- SECTION 2: SEARCH CRITERIA & HIDDEN GEMS -----------------
-st.subheader("2. Search Criteria & Channel Matrix")
+# ----------------- SECTION 2: SEARCH CRITERIA & CHANNELS -----------------
+st.subheader("2. Search Criteria & Live Channel Matrix")
 
-c_kw, c_gems, c_rem = st.columns([3, 1.8, 1])
+c_kw, c_rem = st.columns([4, 1.2])
 with c_kw:
-    search_keyword = st.text_input("🎯 Target Role / Tech Stack:", value="Python Engineer")
-with c_gems:
-    st.write("")
-    st.write("")
-    only_hidden_gems = st.checkbox("✨ Developer Remote Feeds Only", value=False, help="Limits results to WeWorkRemotely and Remotive developer communities.")
+    search_keyword = st.text_input("🎯 Target Role / Tech Stack:", value="AI Engineer")
 with c_rem:
     st.write("")
     st.write("")
@@ -187,15 +185,15 @@ with c_rem:
 
 ALL_PORTALS = [
     "Duunitori (FI)",
+    "Work in Finland (FI)",
+    "Jobicy (EU)",
+    "Arbeitnow (EU)",
     "WeWorkRemotely",
-    "Remotive",
-    "Arbeitnow",
-    "RemoteOK",
-    "LinkedIn"
+    "RemoteOK"
 ]
-FINNISH_PORTALS = ["Duunitori (FI)"]
-GLOBAL_PORTALS = ["WeWorkRemotely", "Remotive", "Arbeitnow", "RemoteOK", "LinkedIn"]
-HIDDEN_GEMS = ["WeWorkRemotely", "Remotive"]
+FINNISH_PORTALS = ["Duunitori (FI)", "Work in Finland (FI)"]
+EU_PORTALS = ["Duunitori (FI)", "Work in Finland (FI)", "Jobicy (EU)", "Arbeitnow (EU)"]
+GLOBAL_PORTALS = ["Jobicy (EU)", "Arbeitnow (EU)", "WeWorkRemotely", "RemoteOK"]
 
 if "active_portals" not in st.session_state:
     st.session_state.active_portals = ALL_PORTALS
@@ -206,19 +204,19 @@ st.caption("Every listing is dynamically scraped in real time with direct permal
 
 p1, p2, p3, p4, p5 = st.columns([1.5, 1.4, 1.4, 1, 1])
 with p1:
-    if st.button("🇫🇮 Duunitori Finland (Live)", use_container_width=True):
+    if st.button("🇫🇮 Finland (Duunitori + Work in Finland)", use_container_width=True):
         st.session_state.active_portals = FINNISH_PORTALS
         st.rerun()
 with p2:
-    if st.button("⚡ Remote Developer Feeds", use_container_width=True):
-        st.session_state.active_portals = HIDDEN_GEMS
+    if st.button("🇪🇺 Finland + Europe Tech", use_container_width=True):
+        st.session_state.active_portals = EU_PORTALS
         st.rerun()
 with p3:
-    if st.button("🌐 Global Remote (All 5)", use_container_width=True):
+    if st.button("🌐 Global Remote (All 4)", use_container_width=True):
         st.session_state.active_portals = GLOBAL_PORTALS
         st.rerun()
 with p4:
-    if st.button("✅ All Feeds (6)", use_container_width=True):
+    if st.button("✅ All 6 Feeds", use_container_width=True):
         st.session_state.active_portals = ALL_PORTALS
         st.rerun()
 with p5:
@@ -232,6 +230,12 @@ selected_portals = st.multiselect(
     default=st.session_state.active_portals,
     help="Add or remove channels with 1 click."
 )
+
+# Optional External LinkedIn launcher (transparently separated from verified feeds)
+c_li, _ = st.columns([3, 1])
+with c_li:
+    encoded_query = urllib.parse.quote_plus(search_keyword)
+    st.markdown(f"💡 *Looking for LinkedIn?* <a href='https://www.linkedin.com/jobs/search/?keywords={encoded_query}&location=Finland' target='_blank' style='color:#818CF8; font-weight:600; text-decoration:none;'>🔍 Click here to search '{search_keyword}' live on LinkedIn in a new tab &rarr;</a>", unsafe_allow_html=True)
 
 # ----------------- SECTION 3: MASTER EXECUTION -----------------
 st.write("")
@@ -251,10 +255,10 @@ if find_jobs_btn or "app_state" in st.session_state:
         st.warning("⚠️ Please upload your CV file above first!")
     else:
         if find_jobs_btn:
-            with st.status("Running Comprehensive Multi-Channel Engine...", expanded=True) as status:
+            with st.status("Running Verified Multi-Source Ingestion Engine...", expanded=True) as status:
                 st.write("1. Enforcing Zero-Trust PII Redaction...")
                 time.sleep(0.1)
-                st.write(f"2. Scraping Duunitori, WeWorkRemotely, Remotive, Arbeitnow & RemoteOK for '{search_keyword}'...")
+                st.write(f"2. Scraping Duunitori (Nationwide Finland), Work in Finland, Jobicy (EU), Arbeitnow & Remote Feeds for '{search_keyword}'...")
                 
                 # Execute application Use Case
                 candidate, matched_jobs, match_results = st.session_state.match_use_case.execute(
@@ -262,7 +266,7 @@ if find_jobs_btn or "app_state" in st.session_state:
                     search_query=search_keyword,
                     portals=selected_portals,
                     privacy_mode=privacy_mode,
-                    only_hidden_gems=only_hidden_gems
+                    only_hidden_gems=False
                 )
 
                 if remote_only:
@@ -280,29 +284,27 @@ if find_jobs_btn or "app_state" in st.session_state:
         results_map = state.get("match_results", {})
         candidate = state.get("candidate")
 
-        st.subheader(f"3. Discovered Matches ({len(jobs_to_show)} Jobs Found)")
+        st.subheader(f"3. Discovered Matches ({len(jobs_to_show)} Jobs Found - Ranked by Differentiated Fit)")
 
         # Render Job Cards
         for idx, job in enumerate(jobs_to_show):
-            score = job.match_score or 85
-            badge_color = "#10B981" if score >= 85 else "#6366F1" if score >= 75 else "#F59E0B"
+            score = job.match_score or 75
+            badge_color = "#10B981" if score >= 85 else "#6366F1" if score >= 70 else "#F59E0B"
             res = results_map.get(job.id)
-
-            gem_tag = "<span class='gem-badge'>⚡ DEVELOPER FEED</span>" if getattr(job, 'is_hidden_gem', False) else ""
 
             with st.container():
                 st.markdown(f"""
                 <div class='job-card'>
                     <div style='display: flex; justify-content: space-between; align-items: flex-start;'>
                         <div>
-                            <h3 style='margin: 0; color: #FFFFFF;'>{job.title} {gem_tag}</h3>
+                            <h3 style='margin: 0; color: #FFFFFF;'>{job.title}</h3>
                             <p style='margin: 4px 0 0 0; color: #94A3B8; font-size: 0.9rem;'>
                                 <strong>{job.company}</strong> &bull; {job.location} &bull; 
                                 <span style='color: #818CF8;'>Source: {job.source_portal}</span>
                             </p>
                         </div>
                         <span style='background: {badge_color}22; color: {badge_color}; border: 1px solid {badge_color}55; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.95rem;'>
-                            {score}% Match
+                            {score}% Fit
                         </span>
                     </div>
                     <div style='margin-top: 8px; color: #10B981; font-weight: 600; font-size: 0.85rem;'>
@@ -320,10 +322,7 @@ if find_jobs_btn or "app_state" in st.session_state:
                 # Action Links Bar
                 col_actions1, col_actions2 = st.columns([3, 1])
                 with col_actions1:
-                    if job.source_portal == "LinkedIn":
-                        links_html = f"<a href='{job.url}' target='_blank' style='display:inline-block; margin-right:16px; color:#818CF8; font-weight:700; font-size:0.92rem; text-decoration:none;'>🔍 Search Matching Jobs on LinkedIn &rarr;</a>"
-                    else:
-                        links_html = f"<a href='{job.url}' target='_blank' style='display:inline-block; margin-right:16px; color:#10B981; font-weight:700; font-size:0.92rem; text-decoration:none;'>🟢 Direct Verified Job Ad (Apply Now) &rarr;</a>"
+                    links_html = f"<a href='{job.url}' target='_blank' style='display:inline-block; margin-right:16px; color:#10B981; font-weight:700; font-size:0.92rem; text-decoration:none;'>🟢 Direct Verified Job Ad (Apply Now) &rarr;</a>"
                     st.markdown(links_html, unsafe_allow_html=True)
                 
                 with col_actions2:
@@ -360,7 +359,7 @@ if find_jobs_btn or "app_state" in st.session_state:
 
 I recently came across the {job.title} opening at {job.company} and wanted to reach out directly. 
 
-With 7+ years architecting scalable Python backends and distributed systems, I recently engineered workflows that reduced operational query latency by 64% while maintaining high availability. Given {job.company}'s active growth, I'd love to share how my background in modern system architecture can immediately support your engineering goals.
+With proven experience architecting scalable software backends and distributed systems, I recently engineered workflows that reduced operational query latency by 64% while maintaining high availability. Given {job.company}'s active growth, I'd love to share how my technical background can immediately support your engineering goals.
 
 Are you available for a brief 10-minute introductory conversation this week?
 
@@ -374,9 +373,9 @@ Best regards,
                     with t_prep:
                         st.write("### Predicted Interview Questions for this Role:")
                         st.markdown(f"""
-                        1. **System Design:** How would you design a resilient, high-throughput asynchronous backend in Python to handle sudden bursts of data traffic?
-                        2. **Domain Architecture:** At **{job.company}**, what architectural trade-offs would you make between low-latency caching (Redis/vector stores) and database consistency?
-                        3. **Behavioral Impact:** Can you walk us through a production incident where latency spiked, and how you traced and resolved the bottleneck?
+                        1. **Technical Problem Solving:** How would you approach designing a resilient asynchronous architecture for **{job.company}**?
+                        2. **Domain Architecture:** What architectural trade-offs would you make between caching latency and data consistency?
+                        3. **Impact & Ownership:** Can you describe a production bottleneck you diagnosed and successfully resolved?
                         """)
 
 # ----------------- SECTION 4: APPLICATION PIPELINE TRACKER -----------------
