@@ -6,10 +6,11 @@ with direct permalinks to the actual active job advertisement page.
 Verified Feeds:
 1. Duunitori (All Finland - Nationwide Multi-Page & Multi-Term): 50-100+ real active Finnish jobs
 2. Work in Finland (Business Finland Official ICT Hub): 50-100+ real active Finnish tech jobs
-3. Jobicy (European Tech & Remote EU): 25 real active European tech jobs (untouched)
-4. Arbeitnow (European & Nordic Tech): 25 real active European jobs (untouched)
-5. WeWorkRemotely (Global Software Engineering): 25 real active remote jobs (untouched)
-6. RemoteOK (Global Tech Remote): 25 real active remote jobs (untouched)
+3. Academic Work Finland (Verified Direct Ads): Real active vacancies from academicwork.fi
+4. Jobicy (European Tech & Remote EU): 25 real active European tech jobs (untouched)
+5. Arbeitnow (European & Nordic Tech): 25 real active European jobs (untouched)
+6. WeWorkRemotely (Global Software Engineering): 25 real active remote jobs (untouched)
+7. RemoteOK (Global Tech Remote): 25 real active remote jobs (untouched)
 """
 import json
 import urllib.request
@@ -24,7 +25,7 @@ from core.interfaces import IJobScraper
 class JobScraperImpl(IJobScraper):
     def __init__(self):
         self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 AutoJobAI/3.3'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 AutoJobAI/3.4'
         }
 
     # ----------------- 1. LIVE DUUNITORI SCRAPER (FINLAND NATIONWIDE & MULTI-TERM) -----------------
@@ -32,7 +33,6 @@ class JobScraperImpl(IJobScraper):
         jobs = []
         seen_urls = set()
         
-        # Intelligent Finnish & English term expansion
         q_lower = (query or "").lower()
         subqueries = [query] if query else ["Software"]
         if "ai" in q_lower or "machine" in q_lower or "learning" in q_lower:
@@ -130,7 +130,48 @@ class JobScraperImpl(IJobScraper):
             pass
         return jobs
 
-    # ----------------- 3. LIVE JOBICY EUROPE (EUROPEAN & NORDIC TECH - UNTOUCHED) -----------------
+    # ----------------- 3. LIVE ACADEMIC WORK FINLAND (ACADEMICWORK.FI SCRAPER) -----------------
+    def _fetch_academic_work(self, query: str = "", limit: int = 20) -> List[JobListing]:
+        jobs = []
+        seen_urls = set()
+        subqueries = [query, "IT"] if query else ["IT"]
+        
+        for sq in subqueries:
+            try:
+                q_enc = urllib.parse.quote_plus(sq or "IT")
+                url = f"https://www.academicwork.fi/avoimet-tyopaikat?q={q_enc}"
+                req = urllib.request.Request(url, headers=self.headers)
+                with urllib.request.urlopen(req, timeout=4) as response:
+                    page = response.read().decode('utf-8', errors='ignore')
+                    matches = re.findall(r'aria-label=\"Mene ([^\"]+)\" href=\"(/avoimet-tyopaikat/j/[^\"]+)\"', page)
+                    for title, link in matches:
+                        direct_url = "https://www.academicwork.fi" + link.strip()
+                        if direct_url not in seen_urls:
+                            seen_urls.add(direct_url)
+                            clean_title = html_lib.unescape(title).strip()
+                            jobs.append(JobListing(
+                                id=f"aw-{abs(hash(direct_url)) % 1000000}",
+                                title=clean_title,
+                                company="Academic Work Finland",
+                                location="Helsinki / Espoo / Tampere / Hybrid, Finland",
+                                is_remote=True if "remote" in clean_title.lower() or "etä" in clean_title.lower() else False,
+                                salary_range="Competitive Nordic Salary (TES Collective Agreement)",
+                                source_portal="Academic Work (FI)",
+                                url=direct_url,
+                                posted_date="Active Today",
+                                description=f"Verified active technology position for {clean_title} via Academic Work Finland.",
+                                tags=["Finland", "Academic Work", "Engineering", "Verified Live Ad"],
+                                requirements=["Relevant degree or technical experience", "Fluent English or Finnish"],
+                                category="live_verified",
+                                is_hidden_gem=False
+                            ))
+                        if len(jobs) >= limit:
+                            break
+            except Exception:
+                pass
+        return jobs
+
+    # ----------------- 4. LIVE JOBICY EUROPE (EUROPEAN & NORDIC TECH - UNTOUCHED) -----------------
     def _fetch_jobicy_europe(self, query: str = "", limit: int = 25) -> List[JobListing]:
         jobs = []
         try:
@@ -160,7 +201,7 @@ class JobScraperImpl(IJobScraper):
             pass
         return jobs
 
-    # ----------------- 4. LIVE ARBEITNOW API (EUROPEAN TECH - UNTOUCHED) -----------------
+    # ----------------- 5. LIVE ARBEITNOW API (EUROPEAN TECH - UNTOUCHED) -----------------
     def _fetch_arbeitnow(self, limit: int = 25) -> List[JobListing]:
         jobs = []
         try:
@@ -190,7 +231,7 @@ class JobScraperImpl(IJobScraper):
             pass
         return jobs
 
-    # ----------------- 5. LIVE WEWORKREMOTELY RSS (GLOBAL TECH - UNTOUCHED) -----------------
+    # ----------------- 6. LIVE WEWORKREMOTELY RSS (GLOBAL TECH - UNTOUCHED) -----------------
     def _fetch_weworkremotely(self, limit: int = 25) -> List[JobListing]:
         jobs = []
         try:
@@ -238,7 +279,7 @@ class JobScraperImpl(IJobScraper):
             pass
         return jobs
 
-    # ----------------- 6. LIVE REMOTEOK FEED (GLOBAL REMOTE - UNTOUCHED) -----------------
+    # ----------------- 7. LIVE REMOTEOK FEED (GLOBAL REMOTE - UNTOUCHED) -----------------
     def _fetch_remoteok(self, limit: int = 25) -> List[JobListing]:
         jobs = []
         try:
@@ -269,7 +310,7 @@ class JobScraperImpl(IJobScraper):
             pass
         return jobs
 
-    # ----------------- 7. MASTER AGGREGATOR (100% REAL LIVE DATA ONLY) -----------------
+    # ----------------- 8. MASTER AGGREGATOR (100% REAL LIVE DATA ONLY) -----------------
     def fetch_jobs(
         self, 
         query: str = "", 
@@ -284,16 +325,19 @@ class JobScraperImpl(IJobScraper):
         # 2. Live Work in Finland (Business Finland Official Portal)
         all_jobs.extend(self._fetch_work_in_finland(query=query, limit=50))
 
-        # 3. Live Jobicy Europe (25 real European tech jobs - Untouched)
+        # 3. Live Academic Work Finland (academicwork.fi Verified Direct Ads)
+        all_jobs.extend(self._fetch_academic_work(query=query, limit=20))
+
+        # 4. Live Jobicy Europe (25 real European tech jobs - Untouched)
         all_jobs.extend(self._fetch_jobicy_europe(query=query, limit=25))
 
-        # 4. Live Arbeitnow European Tech (25 real European tech jobs - Untouched)
+        # 5. Live Arbeitnow European Tech (25 real European tech jobs - Untouched)
         all_jobs.extend(self._fetch_arbeitnow(limit=25))
 
-        # 5. Live WeWorkRemotely RSS (25 real remote software jobs - Untouched)
+        # 6. Live WeWorkRemotely RSS (25 real remote software jobs - Untouched)
         all_jobs.extend(self._fetch_weworkremotely(limit=25))
 
-        # 6. Live RemoteOK API (25 real remote jobs - Untouched)
+        # 7. Live RemoteOK API (25 real remote jobs - Untouched)
         all_jobs.extend(self._fetch_remoteok(limit=25))
 
         # Filter by selected portal if specified

@@ -2,7 +2,8 @@
 Presentation Layer: Streamlit Dashboard UI
 AutoJobAI - Comprehensive Autonomous Job Hunter & Career Copilot
 - 100% Verified Live Job Ads with Zero Ghost Links
-- Extensive Coverage across Finland (Duunitori Nationwide + Work in Finland Official Hub) and Europe (Jobicy EU, Arbeitnow EU, WWR, RemoteOK)
+- Extensive Coverage across Finland (Duunitori Nationwide + Work in Finland + Academic Work + Kuntarekry Launcher)
+- Untouched European (Jobicy EU, Arbeitnow EU) and Global Remote (WWR, RemoteOK) feeds
 - Differentiated Multi-Factor Match Scoring (Real % based on candidate skills)
 - 1-Click Application Pack: Tailored Cover Letter + Recruiter Cold Outreach + Interview Prep Predictor
 - Fixed Widget Key Synchronization (No Cross-Company State Collisions)
@@ -147,7 +148,7 @@ with st.sidebar:
 # Header
 st.markdown("<h1 class='main-title'>AutoJobAI</h1>", unsafe_allow_html=True)
 st.markdown(f"<div style='display:inline-flex; align-items:center; gap:8px; background:#10B98122; border:1px solid #10B98166; color:#10B981; padding:4px 12px; border-radius:8px; font-weight:700; font-size:0.85rem; margin-bottom:8px;'>✔ Comprehensive Multi-Channel Engine &bull; Extensive Finland & EU Coverage &bull; Differentiated Fit Scores</div>", unsafe_allow_html=True)
-st.markdown("<p class='subtitle'>Autonomous Job Hunter &bull; Real-Time Verified Postings (Duunitori Nationwide, Work in Finland Official Hub, Jobicy Europe, Arbeitnow EU, WeWorkRemotely, RemoteOK)</p>", unsafe_allow_html=True)
+st.markdown("<p class='subtitle'>Autonomous Job Hunter &bull; Real-Time Verified Postings (Duunitori Nationwide, Work in Finland Official Hub, Academic Work, Jobicy Europe, Arbeitnow EU, WeWorkRemotely, RemoteOK)</p>", unsafe_allow_html=True)
 
 # ----------------- SECTION 1: CV UPLOAD -----------------
 st.subheader("1. Your CV / Resume")
@@ -186,13 +187,14 @@ with c_rem:
 ALL_PORTALS = [
     "Duunitori (FI)",
     "Work in Finland (FI)",
+    "Academic Work (FI)",
     "Jobicy (EU)",
     "Arbeitnow (EU)",
     "WeWorkRemotely",
     "RemoteOK"
 ]
-FINNISH_PORTALS = ["Duunitori (FI)", "Work in Finland (FI)"]
-EU_PORTALS = ["Duunitori (FI)", "Work in Finland (FI)", "Jobicy (EU)", "Arbeitnow (EU)"]
+FINNISH_PORTALS = ["Duunitori (FI)", "Work in Finland (FI)", "Academic Work (FI)"]
+EU_PORTALS = ["Duunitori (FI)", "Work in Finland (FI)", "Academic Work (FI)", "Jobicy (EU)", "Arbeitnow (EU)"]
 GLOBAL_PORTALS = ["Jobicy (EU)", "Arbeitnow (EU)", "WeWorkRemotely", "RemoteOK"]
 
 if "active_portals" not in st.session_state:
@@ -204,7 +206,7 @@ st.caption("Every listing is dynamically scraped in real time with direct permal
 
 p1, p2, p3, p4, p5 = st.columns([1.5, 1.4, 1.4, 1, 1])
 with p1:
-    if st.button("🇫🇮 Finland (Duunitori + Work in Finland)", use_container_width=True):
+    if st.button("🇫🇮 Finland (Duunitori + WIF + Academic Work)", use_container_width=True):
         st.session_state.active_portals = FINNISH_PORTALS
         st.rerun()
 with p2:
@@ -216,7 +218,7 @@ with p3:
         st.session_state.active_portals = GLOBAL_PORTALS
         st.rerun()
 with p4:
-    if st.button("✅ All 6 Feeds", use_container_width=True):
+    if st.button("✅ All 7 Feeds", use_container_width=True):
         st.session_state.active_portals = ALL_PORTALS
         st.rerun()
 with p5:
@@ -231,11 +233,14 @@ selected_portals = st.multiselect(
     help="Add or remove channels with 1 click."
 )
 
-# Optional External LinkedIn launcher (transparently separated from verified feeds)
-c_li, _ = st.columns([3, 1])
-with c_li:
-    encoded_query = urllib.parse.quote_plus(search_keyword)
-    st.markdown(f"💡 *Looking for LinkedIn?* <a href='https://www.linkedin.com/jobs/search/?keywords={encoded_query}&location=Finland' target='_blank' style='color:#818CF8; font-weight:600; text-decoration:none;'>🔍 Click here to search '{search_keyword}' live on LinkedIn in a new tab &rarr;</a>", unsafe_allow_html=True)
+# External Direct Search Launchers
+c_ext1, c_ext2 = st.columns([1, 1])
+with c_ext1:
+    encoded_kr = urllib.parse.quote_plus(search_keyword)
+    st.markdown(f"🏛️ *Public Sector & Municipal:* <a href='https://www.kuntarekry.fi/fi/tyopaikat/?hakusana={encoded_kr}' target='_blank' style='color:#10B981; font-weight:600; text-decoration:none;'>🔍 Search '{search_keyword}' live on Kuntarekry.fi &rarr;</a>", unsafe_allow_html=True)
+with c_ext2:
+    encoded_li = urllib.parse.quote_plus(search_keyword)
+    st.markdown(f"💼 *Professional Network:* <a href='https://www.linkedin.com/jobs/search/?keywords={encoded_li}&location=Finland' target='_blank' style='color:#818CF8; font-weight:600; text-decoration:none;'>🔍 Search '{search_keyword}' live on LinkedIn &rarr;</a>", unsafe_allow_html=True)
 
 # ----------------- SECTION 3: MASTER EXECUTION -----------------
 st.write("")
@@ -258,7 +263,7 @@ if find_jobs_btn or "app_state" in st.session_state:
             with st.status("Running Verified Multi-Source Ingestion Engine...", expanded=True) as status:
                 st.write("1. Enforcing Zero-Trust PII Redaction...")
                 time.sleep(0.1)
-                st.write(f"2. Scraping Duunitori (Nationwide Finland), Work in Finland, Jobicy (EU), Arbeitnow & Remote Feeds for '{search_keyword}'...")
+                st.write(f"2. Scraping Duunitori (Nationwide Finland), Work in Finland, Academic Work, Jobicy (EU), Arbeitnow & Remote Feeds for '{search_keyword}'...")
                 
                 # Execute application Use Case
                 candidate, matched_jobs, match_results = st.session_state.match_use_case.execute(
@@ -348,7 +353,6 @@ if find_jobs_btn or "app_state" in st.session_state:
                     with t_cov:
                         if candidate:
                             letter = st.session_state.cover_letter_use_case.execute(candidate, job, match_result=res)
-                            # Explicitly synchronize session state to prevent widget key collision
                             cl_key = f"cl_{job.id}"
                             st.session_state[cl_key] = letter.content
                             st.text_area(f"ATS-Tailored Cover Letter for {job.company}:", value=letter.content, height=220, key=cl_key)
