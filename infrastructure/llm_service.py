@@ -1,14 +1,48 @@
 """
 Infrastructure Layer: Concrete LLM Service Implementation
 Implements ILLMService: Integrates with Gemini LLM (gemini-3.8-flash) & RAG Grounding
+Automatically loads GEMINI_API_KEY from environment, .env file, or direct parameter.
 """
 import os
 from core.entities import CandidateProfile, JobListing
 from core.interfaces import ILLMService
 
+def _load_env_if_present():
+    """Lightweight built-in .env parser (zero third-party dependency)"""
+    search_paths = [
+        os.path.join(os.getcwd(), ".env"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    ]
+    for env_path in search_paths:
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#") and "=" in line:
+                            k, v = line.split("=", 1)
+                            k = k.strip()
+                            v = v.strip().strip("'\"")
+                            if k and k not in os.environ:
+                                os.environ[k] = v
+            except Exception:
+                pass
+
+# Auto-load on import
+_load_env_if_present()
+
 class GeminiLLMService(ILLMService):
     def __init__(self, api_key: str = None):
+        _load_env_if_present()
         self.api_key = api_key or os.getenv("GEMINI_API_KEY", "")
+
+    def set_api_key(self, api_key: str):
+        self.api_key = (api_key or "").strip()
+
+    @property
+    def is_active(self) -> bool:
+        return bool(self.api_key and not self.api_key.startswith("MY_GEMINI") and not self.api_key.startswith("your-gemini"))
 
     def generate_cover_letter(
         self, 
@@ -17,8 +51,8 @@ class GeminiLLMService(ILLMService):
         evidence: list = None, 
         tone: str = "persuasive"
     ) -> str:
-        # If Gemini API key is available, attempt real SDK inference
-        if self.api_key:
+        # If valid Gemini API key is available, attempt real SDK inference
+        if self.is_active:
             try:
                 from google import genai
                 client = genai.Client(api_key=self.api_key)

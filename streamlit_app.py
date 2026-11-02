@@ -123,10 +123,13 @@ with st.sidebar:
         help="Reads from .env file or environment variable automatically. If empty, uses built-in grounded RAG synthesis without requiring an API key."
     )
     if key_input:
-        st.session_state.llm_service.set_api_key(key_input)
+        if hasattr(st.session_state.llm_service, "set_api_key"):
+            st.session_state.llm_service.set_api_key(key_input)
+        else:
+            st.session_state.llm_service.api_key = key_input
         st.success("🟢 Gemini 3.8 Flash Active")
-    elif st.session_state.llm_service.is_active:
-        st.success("🟢 Gemini 3.8 Flash Active (via .env)")
+    elif getattr(st.session_state.llm_service, "is_active", False) or bool(getattr(st.session_state.llm_service, "api_key", "")):
+        st.success("🟢 Gemini 3.8 Flash Active")
     else:
         st.caption("🔵 Grounded RAG Synthesis Active (No API key needed)")
 
