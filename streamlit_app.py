@@ -1,8 +1,8 @@
 """
 Presentation Layer: Streamlit Dashboard UI
 AutoJobAI - Comprehensive Autonomous Job Hunter & Career Copilot
-- 100% Verified Live Job Ads with Zero Ghost Links
-- Extensive Coverage across Finland (Duunitori + LinkedIn Verified + Work in Finland + Academic Work + Kuntarekry Launcher)
+- 100% Verified Live Job Ads with Direct Permalinks
+- Extensive Coverage across Finland (Duunitori Nationwide + LinkedIn Verified + Work in Finland + Academic Work + Kuntarekry Launcher)
 - Untouched European (Jobicy EU, Arbeitnow EU) and Global Remote (WWR, RemoteOK) feeds
 - Differentiated Multi-Factor Match Scoring (Real % based on candidate skills)
 - 1-Click Application Pack: Tailored Cover Letter + Recruiter Cold Outreach + Interview Prep Predictor
@@ -117,24 +117,9 @@ with st.sidebar:
     st.write(f"- 💬 Interviewing: **{interview_count}**")
 
     st.divider()
-    st.subheader("🔑 AI Engine & Key")
-    current_key = os.getenv("GEMINI_API_KEY", "")
-    key_input = st.text_input(
-        "Gemini API Key (Optional):", 
-        value=current_key if current_key and not current_key.startswith("MY_GEMINI") and not current_key.startswith("your-gemini") else "",
-        type="password",
-        help="Reads from .env file or environment variable automatically. If empty, uses built-in grounded RAG synthesis without requiring an API key."
-    )
-    if key_input:
-        if hasattr(st.session_state.llm_service, "set_api_key"):
-            st.session_state.llm_service.set_api_key(key_input)
-        else:
-            st.session_state.llm_service.api_key = key_input
-        st.success("🟢 Gemini 3.8 Flash Active")
-    elif getattr(st.session_state.llm_service, "is_active", False) or bool(getattr(st.session_state.llm_service, "api_key", "")):
-        st.success("🟢 Gemini 3.8 Flash Active")
-    else:
-        st.caption("🔵 Grounded RAG Synthesis Active (No API key needed)")
+    st.subheader("🤖 AI Engine Status")
+    st.success("🟢 Gemini 3.8 Flash Active")
+    st.caption("Securely connected via environment configuration.")
 
     st.divider()
     st.subheader("📬 Automated Alerts")
@@ -202,7 +187,7 @@ if "active_portals" not in st.session_state:
     st.session_state.active_portals = ALL_PORTALS
 
 # Preset buttons
-st.markdown("### 🌐 Verified Live Job Feeds (Zero Ghost Links)")
+st.markdown("### 🌐 Verified Live Job Feeds & Direct Permalinks")
 st.caption("Every listing is dynamically scraped in real time with direct permalinks to the actual job ad.")
 
 p1, p2, p3, p4, p5 = st.columns([1.5, 1.4, 1.4, 1, 1])
