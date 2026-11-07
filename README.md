@@ -3,8 +3,9 @@
 This is the standalone Python project for **AutoJobAI**, utilizing **LangGraph**, **RAG**, **FastAPI**, **Streamlit**, and **Gemini LLM**.
 
 ---
+🚀 Try the Live Url: https://autojobai-platform.streamlit.app
 
-## 🚀 Quick Start in VS Code
+## Quick Start in VS Code
 
 ### 1. Open in VS Code
 Open VS Code, click **File > Open Folder...**, and select this folder (`python_project`).
