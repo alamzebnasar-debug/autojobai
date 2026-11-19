@@ -1,23 +1,39 @@
 """
-Use Case: Generate Tailored Cover Letter Grounded in Retrieved RAG Evidence
+Use Case: Generate Tailored Cover Letter Grounded in Retrieved RAG Evidence & Job Requirements
 """
 from core.entities import CandidateProfile, JobListing, CoverLetter, MatchResult
 from core.interfaces import ILLMService
+
 
 class GenerateCoverLetterUseCase:
     def __init__(self, llm_service: ILLMService):
         self.llm = llm_service
 
     def execute(
-        self, 
-        candidate: CandidateProfile, 
-        job: JobListing, 
+        self,
+        candidate: CandidateProfile,
+        job: JobListing,
         match_result: MatchResult = None,
-        tone: str = "persuasive"
+        tone: str = "persuasive",
+        custom_focus: str = "",
+        use_llm: bool = True,
     ) -> CoverLetter:
         evidence_snippets = [e.cv_snippet for e in match_result.evidence] if match_result else []
-        content = self.llm.generate_cover_letter(candidate, job, evidence_snippets, tone=tone)
-        
+        matched_skills = match_result.matched_skills if match_result else []
+
+        try:
+            content = self.llm.generate_cover_letter(
+                candidate,
+                job,
+                evidence_snippets,
+                tone=tone,
+                matched_skills=matched_skills,
+                custom_focus=custom_focus,
+                use_llm=use_llm,
+            )
+        except TypeError:
+            content = self.llm.generate_cover_letter(candidate, job, evidence_snippets, tone=tone)
+
         words = content.split()
         return CoverLetter(
             job_id=job.id,
@@ -26,5 +42,5 @@ class GenerateCoverLetterUseCase:
             tone=tone,
             content=content,
             word_count=len(words),
-            ats_readiness=96
+            ats_readiness=96,
         )

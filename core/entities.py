@@ -37,6 +37,9 @@ class JobListing:
     is_hidden_gem: bool = False
     interview_tips: List[str] = field(default_factory=list)
     status: str = "discovered"
+    country: str = "Global / Remote"
+    is_verified_link: bool = True
+    link_status: str = "Verified"
 
 @dataclass
 class RAGEvidenceChunk:
