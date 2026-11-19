@@ -7,6 +7,7 @@ AutoJobAI - Autonomous Job Hunter Across All Industries & Nordic/EU Regions
 - Job-Specific Cover Letter Synthesis (Tailored per job description, requirements, tone, and CV evidence)
 - Built-in Application Pipeline Tracker with CSV Export
 """
+import inspect
 import io
 import os
 import re
@@ -59,21 +60,18 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Session State Initialization
-if "rag_engine" not in st.session_state:
+# Session State Initialization (auto-refreshes when VERSION changes on Streamlit Cloud)
+if st.session_state.get("services_version") != VERSION:
     st.session_state.rag_engine = RAGEngineImpl()
-if "job_scraper" not in st.session_state:
     st.session_state.job_scraper = JobScraperImpl()
-if "llm_service" not in st.session_state:
     st.session_state.llm_service = GeminiLLMService()
-if "match_use_case" not in st.session_state:
     st.session_state.match_use_case = MatchCVToJobsUseCase(
         st.session_state.rag_engine, st.session_state.job_scraper
     )
-if "cover_letter_use_case" not in st.session_state:
     st.session_state.cover_letter_use_case = GenerateCoverLetterUseCase(
         st.session_state.llm_service
     )
+    st.session_state.services_version = VERSION
 if "pipeline_jobs" not in st.session_state:
     st.session_state.pipeline_jobs = {}
 
@@ -377,14 +375,19 @@ if find_jobs_btn or "app_state" in st.session_state:
                 st.write("1. Enforcing Zero-Trust PII Redaction & extracting cross-domain profile...")
                 st.write("2. Scraping regional & EU job boards concurrently + running Link Validator Agent...")
 
-                candidate, matched_jobs, match_results = st.session_state.match_use_case.execute(
-                    cv_text=cv_text,
-                    search_query=search_keyword,
-                    portals=selected_portals,
-                    country=st.session_state.selected_country,
-                    privacy_mode=privacy_mode,
-                    only_hidden_gems=False,
-                )
+                exec_kwargs = {
+                    "cv_text": cv_text,
+                    "search_query": search_keyword,
+                    "portals": selected_portals,
+                    "country": st.session_state.selected_country,
+                    "privacy_mode": privacy_mode,
+                    "only_hidden_gems": False,
+                }
+                sig_params = inspect.signature(st.session_state.match_use_case.execute).parameters
+                if not any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig_params.values()):
+                    exec_kwargs = {k: v for k, v in exec_kwargs.items() if k in sig_params}
+
+                candidate, matched_jobs, match_results = st.session_state.match_use_case.execute(**exec_kwargs)
 
                 if remote_only:
                     matched_jobs = [j for j in matched_jobs if j.is_remote]

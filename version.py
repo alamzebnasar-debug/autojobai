@@ -1,21 +1,22 @@
-VERSION = "3.0.0 - Comprehensive Multi-Channel & Hidden Gems Engine"
+VERSION = "4.0.0 - Nordic & EU Live Multi-Industry Engine"
 RELEASE_DATE = "November 2026"
 CHANNELS = [
+    "Platsbanken SE",
+    "Academic Work (SE)",
+    "TheHub (SE)",
+    "Arbeidsplassen (NO)",
+    "Academic Work (NO)",
+    "TheHub (NO)",
+    "Jobindex (DK)",
+    "Academic Work (DK)",
+    "TheHub (DK)",
     "Duunitori (FI)",
+    "Work in Finland (FI)",
+    "Academic Work (FI)",
+    "TheHub (FI)",
+    "LinkedIn (Verified)",
+    "Arbeitnow (EU)",
+    "Jobicy (EU)",
     "WeWorkRemotely",
-    "Remotive",
-    "Arbeitnow",
     "RemoteOK",
-    "LinkedIn",
-    "CSC LUMI Supercomputing (Direct ATS)",
-    "VTT Research (Direct ATS)",
-    "Aalto University CS Positions",
-    "Varjo (Greenhouse ATS)",
-    "Kempower (Teamtailor ATS)",
-    "Oura (Lever ATS)",
-    "Work in Finland",
-    "Jobly (FI)",
-    "Oikotie (FI)",
-    "The Hub (Nordic FI)",
-    "Työmarkkinatori (FI)"
 ]
